@@ -20,7 +20,8 @@ load_dotenv()
 
 
 class DeepgramTranscriber(BaseTranscriber):
-    def __init__(self, telephony_provider, input_queue=None, model='nova-2', stream=True, language="en", endpointing="400",
+    def __init__(self, telephony_provider, input_queue=None, model='nova-2', stream=True, language="en",
+                 endpointing="400",
                  sampling_rate="16000", encoding="linear16", output_queue=None, keywords=None,
                  process_interim_results="true", **kwargs):
         logger.info(f"Initializing transcriber {kwargs}")
@@ -58,7 +59,7 @@ class DeepgramTranscriber(BaseTranscriber):
         self.process_interim_results = process_interim_results
         self.audio_frame_duration = 0.0
         self.connected_via_dashboard = kwargs.get("enforce_streaming", True)
-        #Message states
+        # Message states
         self.curr_message = ''
         self.finalized_transcript = ""
 
@@ -75,7 +76,7 @@ class DeepgramTranscriber(BaseTranscriber):
         self.audio_frame_duration = 0.5  # We're sending 8k samples with a sample rate of 16k
 
         if self.provider in ('twilio', 'exotel', 'plivo'):
-            self.encoding = 'mulaw' if self.provider in ("twilio") else "linear16"
+            self.encoding = 'mulaw' if self.provider in {"twilio", } else "linear16"
             self.sampling_rate = 8000
             self.audio_frame_duration = 0.2  # With twilio we are sending 200ms at a time
 
@@ -98,7 +99,7 @@ class DeepgramTranscriber(BaseTranscriber):
 
         if self.process_interim_results == "false":
             dg_params['endpointing'] = self.endpointing
-            #dg_params['vad_events'] = 'true'
+            # dg_params['vad_events'] = 'true'
 
         else:
             dg_params['interim_results'] = self.process_interim_results
@@ -224,7 +225,7 @@ class DeepgramTranscriber(BaseTranscriber):
                 if self.connection_start_time is None:
                     self.connection_start_time = (time.time() - (self.num_frames * self.audio_frame_duration))
                     logger.info(
-                        f"Connecton start time {self.connection_start_time} {self.num_frames} and {self.audio_frame_duration}")
+                        f"Connection start time {self.connection_start_time} {self.num_frames} and {self.audio_frame_duration}")
 
                 logger.info(f"###### ######### ############# Message from the transcriber {msg}")
                 if msg['type'] == "Metadata":
@@ -255,19 +256,20 @@ class DeepgramTranscriber(BaseTranscriber):
                     self.finalized_transcript = ""
                     continue
                 
-                #TODO look into meta_info copy issue because this comes out to be true sometimes although it's a transcript
-                self.meta_info['speech_final'] = False #Ensuring that speechfinal is always False
+                # TODO look into meta_info copy issue because this comes out to be true sometimes
+                #  although it's a transcript
+                self.meta_info['speech_final'] = False # Ensuring that speechfinal is always False
 
                 if msg["type"] == "SpeechStarted":
                     if self.curr_message != "" and not self.process_interim_results:
-                        logger.info("Current messsage is null and hence inetrrupting")
+                        logger.info("Current message is null and hence interrupting")
                         self.meta_info["should_interrupt"] = True
                         self.meta_info['speech_final'] = False
                     elif self.process_interim_results:
                         self.meta_info["should_interrupt"] = False
                     logger.info(f"YIELDING TRANSCRIBER BEGIN")
                     yield create_ws_data_packet("TRANSCRIBER_BEGIN", self.meta_info)
-                    await asyncio.sleep(0.05) #Sleep for 50ms to pass the control to task manager
+                    await asyncio.sleep(0.05) # Sleep for 50ms to pass the control to task manager
                     continue
 
                 transcript = msg['channel']['alternatives'][0]['transcript']

@@ -12,7 +12,7 @@ load_dotenv()
 
 class DailyInputHandler:
     def __init__(self, queues=None, websocket=None, input_types=None, mark_set=None, queue=None,
-                conversation_recording=None, room_url=None):
+                 conversation_recording=None, room_url=None):
         self.queues = queues
         self.websocket = websocket
         self.input_types = input_types
