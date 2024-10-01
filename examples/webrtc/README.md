@@ -4,7 +4,7 @@ Seamlessly merge [Bolna](https://github.com/bolna-ai/bolna) with [Daily](https:/
 in .env file kindly save
 DAILY_API_KEY = YOUR_DAILY_API_KEY
 
-### Start Serices
+### Start Services
 ```shell
 docker compose up -d
 ```

@@ -10,25 +10,27 @@ import io
 logger = configure_logger(__name__)
 load_dotenv()
 
+
 class OPENAISynthesizer(BaseSynthesizer):
-    def __init__(self, voice, audio_format="mp3", model = "tts-1", stream=False, sampling_rate=8000, buffer_size=400, **kwargs):
+    def __init__(self, voice, audio_format="mp3", model="tts-1", stream=False, sampling_rate=8000, buffer_size=400,
+                 **kwargs):
         super().__init__(stream, buffer_size)
         self.format = self.get_format(audio_format.lower())
         self.voice = voice
         self.sample_rate = sampling_rate
         api_key = kwargs.get("synthesizer_key", os.getenv("OPENAI_API_KEY"))
-        self.async_client = AsyncOpenAI(api_key= api_key)
+        self.async_client = AsyncOpenAI(api_key=api_key)
         self.model = model
-        self.first_chunk_generated = False 
+        self.first_chunk_generated = False
         self.text_queue = deque()
         self.stream = False
         if type(self.sample_rate) is str:
             self.sample_rate = int(self.sample_rate)
-        
+
     # Ensuring we can only do wav outputs becasue mulaw conversion for others messes up twilio
     def get_format(self, format):
         return "mp3"
-    
+
     async def synthesize(self, text):
         #This is used for one off synthesis mainly for use cases like voice lab and IVR
         audio = await self.__generate_http(text)
@@ -40,21 +42,21 @@ class OPENAISynthesizer(BaseSynthesizer):
             voice=self.voice,
             response_format=self.format,
             input=text
-            )
+        )
 
         buffer = io.BytesIO()
         for chunk in spoken_response.iter_bytes(chunk_size=4096):
             buffer.write(chunk)
         buffer.seek(0)
         return buffer.getvalue()
-    
+
     async def __generate_stream(self, text):
         spoken_response = await self.async_client.audio.speech.create(
             model=self.model,
             voice=self.voice,
             response_format="mp3",
             input=text
-            )
+        )
 
         for chunk in spoken_response.iter_bytes(chunk_size=4096):
             yield chunk
@@ -71,8 +73,9 @@ class OPENAISynthesizer(BaseSynthesizer):
                         if not self.first_chunk_generated:
                             meta_info["is_first_chunk"] = True
                             self.first_chunk_generated = True
-                        yield create_ws_data_packet(resample(convert_audio_to_wav(chunk, 'mp3'), self.sample_rate, format="wav"), meta_info)
-                        
+                        yield create_ws_data_packet(
+                            resample(convert_audio_to_wav(chunk, 'mp3'), self.sample_rate, format="wav"), meta_info)
+
                     if "end_of_llm_stream" in meta_info and meta_info["end_of_llm_stream"]:
                         meta_info["end_of_synthesizer_stream"] = True
                         self.first_chunk_generated = False
@@ -84,14 +87,15 @@ class OPENAISynthesizer(BaseSynthesizer):
                     if not self.first_chunk_generated:
                         meta_info["is_first_chunk"] = True
                         self.first_chunk_generated = True
-                    
+
                     if "end_of_llm_stream" in meta_info and meta_info["end_of_llm_stream"]:
                         meta_info["end_of_synthesizer_stream"] = True
-                        self.first_chunk_generated = False 
-                    yield create_ws_data_packet(resample(convert_audio_to_wav(audio, 'mp3'), self.sample_rate, format="wav"), meta_info)
+                        self.first_chunk_generated = False
+                    yield create_ws_data_packet(
+                        resample(convert_audio_to_wav(audio, 'mp3'), self.sample_rate, format="wav"), meta_info)
 
         except Exception as e:
-                logger.error(f"Error in openai generate {e}")
+            logger.error(f"Error in openai generate {e}")
 
     async def open_connection(self):
         pass

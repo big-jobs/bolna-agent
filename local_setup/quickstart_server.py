@@ -77,8 +77,7 @@ async def websocket_endpoint(agent_id: str, websocket: WebSocket, user_agent: st
     agent_config, context_data = None, None
     try:
         retrieved_agent_config = await redis_client.get(agent_id)
-        logger.info(
-            f"Retrieved agent config: {retrieved_agent_config}")
+        logger.info(f"Retrieved agent config: {retrieved_agent_config}")
         agent_config = json.loads(retrieved_agent_config)
     except Exception as e:
         traceback.print_exc()

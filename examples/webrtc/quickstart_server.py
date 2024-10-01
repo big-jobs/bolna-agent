@@ -55,7 +55,9 @@ async def create_agent(agent_data: CreateAgentPayload):
                 extraction_prompt = await extraction_prompt_generation_llm.generate(
                     messages=[
                         {'role': 'system', 'content': EXTRACTION_PROMPT_GENERATION_PROMPT},
-                        {'role': 'user', 'content': data_for_db["tasks"][index]['tools_config']["llm_agent"]['extraction_details']}
+                        {'role': 'user',
+                         'content': data_for_db["tasks"][index]['tools_config']["llm_agent"]['extraction_details']
+                         }
                     ])
                 data_for_db["tasks"][index]["tools_config"]["llm_agent"]['extraction_json'] = extraction_prompt
 
@@ -84,28 +86,28 @@ async def websocket_endpoint(agent_id: str, websocket: WebSocket, user_agent: st
         async with aiohttp.ClientSession() as session:
             token = os.getenv('DAILY_API_KEY')
             headers = {
-              'Content-Type': 'application/json',
-              'Authorization': f'Bearer {token}'
+                'Content-Type': 'application/json',
+                'Authorization': f'Bearer {token}'
             }
             payload = {
-              'properties': {
-                  'max_participants': 2,
-                  'start_video_off': True,
-                  'enable_screenshare': False,
-                  'enable_recording': 'cloud',
-                  'exp': int(time.time()) + 3600  # room will expire after 1 hour automatically,
-              }
+                'properties': {
+                    'max_participants': 2,
+                    'start_video_off': True,
+                    'enable_screenshare': False,
+                    'enable_recording': 'cloud',
+                    'exp': int(time.time()) + 3600  # room will expire after 1 hour automatically,
+                }
             }
 
             async with session.post("https://api.daily.co/v1/rooms/", headers=headers, json=payload) as response:
-              response_json = await response.json()
-              if response.status != 200:
-                  res = {"connection": False, "type": "closing"}
-              else:
-                  room_url = response_json['url']
-                  res = {"connection": True, "type": "setup", "room_url": room_url}
-                  active_websockets.remove(websocket)
-              await websocket.send_json(res)
+                response_json = await response.json()
+                if response.status != 200:
+                    res = {"connection": False, "type": "closing"}
+                else:
+                    room_url = response_json['url']
+                    res = {"connection": True, "type": "setup", "room_url": room_url}
+                    active_websockets.remove(websocket)
+                await websocket.send_json(res)
         agent_config = json.loads(retrieved_agent_config)
     except Exception as e:
         traceback.print_exc()

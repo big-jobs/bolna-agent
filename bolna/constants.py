@@ -57,7 +57,7 @@ FILLER_DICT = {
 }
 
 CHECKING_THE_DOCUMENTS_FILLER = "Umm, just a moment, getting details..."
-TRANSFERING_CALL_FILLER = "Sure, I'll transfer the call for you. Please wait a moment..."
+TRANSFERRING_CALL_FILLER = "Sure, I'll transfer the call for you. Please wait a moment..."
 
 DEFAULT_USER_ONLINE_MESSAGE = "Hey, are you still there?"
 DEFAULT_USER_ONLINE_MESSAGE_TRIGGER_DURATION = 6
