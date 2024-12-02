@@ -7,7 +7,7 @@ twilio==8.9.0
 uvicorn==0.22.0
 pylance==0.16.0
 pymongo==4.8.0
-python-multipart==0.0.7
+python-multipart==0.0.18
 llama-index==0.10.65
 llama-index-vector-stores-lancedb==0.1.7
 llama-index-vector-stores-mongodb==0.1.8
